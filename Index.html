@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Trainingsplan</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161922;
+    --card: #1c2030;
+    --border: #252a3a;
+    --accent: #c8f135;
+    --accent2: #3b82f6;
+    --text: #f0f4ff;
+    --muted: #6b7a99;
+    --danger: #ff4d6d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding: 0 0 100px;
+    font-size: 15px;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 20px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  header h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--accent);
+  }
+
+  .session-tag {
+    background: var(--accent);
+    color: #0d0f14;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  .header-sub {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+  }
+
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    padding: 14px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .stats-bar::-webkit-scrollbar { display: none; }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 60px;
+  }
+
+  .stat-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .stat-divider {
+    width: 1px;
+    background: var(--border);
+    align-self: stretch;
+  }
+
+  .exercises {
+    padding: 16px 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .exercise-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .exercise-card.active { border-color: var(--accent); }
+
+  .ex-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px 10px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .ex-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 1px;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .ex-badge {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .badge-reps {
+    background: rgba(200, 241, 53, 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(200,241,53,0.3);
+  }
+
+  .badge-weight {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--accent2);
+    border: 1px solid rgba(59,130,246,0.3);
+  }
+
+  .chevron {
+    color: var(--muted);
+    font-size: 14px;
+    margin-left: 8px;
+    transition: transform 0.25s;
+  }
+  .exercise-card.open .chevron { transform: rotate(180deg); }
+
+  .ex-sets-row {
+    display: flex;
+    gap: 6px;
+    padding: 0 16px 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .ex-sets-row::-webkit-scrollbar { display: none; }
+
+  .set-pill {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 52px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .set-pill.done {
+    background: rgba(200, 241, 53, 0.12);
+    border-color: var(--accent);
+  }
+
+  .set-num {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .set-check {
+    font-size: 14px;
+    margin-top: 2px;
+    color: var(--muted);
+  }
+
+  .set-pill.done .set-check { color: var(--accent); }
+
+  /* Edit Panel */
+  .edit-panel {
+    display: none;
+    padding: 0 16px 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .exercise-card.open .edit-panel { display: block; }
+
+  .edit-panel-inner {
+    padding-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .edit-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .edit-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .edit-field label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+  }
+
+  .edit-field input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 10px 12px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+
+  .edit-field input:focus { border-color: var(--accent); }
+
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .stepper button {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 20px;
+    font-weight: 600;
+    padding: 8px 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    line-height: 1;
+    transition: background 0.15s;
+  }
+
+  .stepper button:active { background: rgba(200,241,53,0.1); }
+
+  .stepper input {
+    background: none;
+    border: none;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 8px 0;
+    text-align: center;
+    width: 60px;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .note-field {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 10px 12px;
+    width: 100%;
+    outline: none;
+    resize: none;
+    min-height: 60px;
+    transition: border-color 0.15s;
+  }
+  .note-field:focus { border-color: var(--accent2); }
+
+  .note-field::placeholder { color: var(--muted); }
+
+  /* Progress Ring */
+  .progress-ring-wrap {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+
+  .progress-ring-wrap svg { transform: rotate(-90deg); }
+
+  .progress-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  /* FAB */
+  .fab-reset {
+    position: fixed;
+    bottom: 24px;
+    right: 20px;
+    background: var(--danger);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(255,77,109,0.4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 99;
+  }
+
+  .fab-timer {
+    position: fixed;
+    bottom: 24px;
+    left: 20px;
+    background: var(--accent2);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(59,130,246,0.4);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 99;
+  }
+
+  /* Timer Modal */
+  .timer-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .timer-overlay.show { display: flex; }
+
+  .timer-modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px 24px 0 0;
+    padding: 28px 24px 40px;
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+  }
+
+  .timer-display {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    color: var(--accent);
+    letter-spacing: 4px;
+    line-height: 1;
+    margin: 20px 0;
+  }
+
+  .timer-label {
+    font-size: 13px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .timer-presets {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+
+  .preset-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .preset-btn:active, .preset-btn.sel {
+    background: var(--accent);
+    color: #0d0f14;
+    border-color: var(--accent);
+  }
+
+  .timer-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 16px;
+  }
+
+  .timer-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .timer-btn.primary {
+    background: var(--accent);
+    color: #0d0f14;
+    border-color: var(--accent);
+    width: 70px;
+    height: 70px;
+    font-size: 26px;
+  }
+
+  .timer-btn:active { opacity: 0.8; }
+
+  .close-modal {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .timer-modal { position: relative; }
+
+  /* Save notice */
+  .save-notice {
+    position: fixed;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    color: #0d0f14;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 20px;
+    transition: top 0.3s;
+    z-index: 999;
+    white-space: nowrap;
+  }
+
+  .save-notice.show { top: 14px; }
+</style>
+</head>
+<body>
+
+<div class="save-notice" id="saveNotice">✓ Gespeichert</div>
+
+<header>
+  <div class="header-top">
+    <h1>💪 Trainingsplan</h1>
+    <span class="session-tag">GYM80 · SYGNUM</span>
+  </div>
+  <div class="header-sub" id="dateLabel">Lade Datum...</div>
+</header>
+
+<div class="stats-bar" id="statsBar">
+  <div class="stat">
+    <span class="stat-val" id="statExCount">7</span>
+    <span class="stat-label">Übungen</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat">
+    <span class="stat-val" id="statSets">0/21</span>
+    <span class="stat-label">Sätze</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat">
+    <span class="stat-val" id="statKg">—</span>
+    <span class="stat-label">Ø Gewicht</span>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat">
+    <span class="stat-val" id="statVol">—</span>
+    <span class="stat-label">Volumen (kg)</span>
+  </div>
+</div>
+
+<div class="exercises" id="exerciseList"></div>
+
+<button class="fab-timer" id="timerBtn">⏱ Pause</button>
+<button class="fab-reset" id="resetBtn">🔄 Reset</button>
+
+<div class="timer-overlay" id="timerOverlay">
+  <div class="timer-modal">
+    <button class="close-modal" id="closeTimer">✕</button>
+    <div class="timer-label">Pausenzeit</div>
+    <div class="timer-display" id="timerDisplay">01:30</div>
+    <div class="timer-presets">
+      <button class="preset-btn" onclick="setTimer(60)">1 Min</button>
+      <button class="preset-btn sel" onclick="setTimer(90)">1:30</button>
+      <button class="preset-btn" onclick="setTimer(120)">2 Min</button>
+      <button class="preset-btn" onclick="setTimer(180)">3 Min</button>
+    </div>
+    <div class="timer-btns">
+      <button class="timer-btn" id="resetTimer" title="Zurücksetzen">↺</button>
+      <button class="timer-btn primary" id="startTimer">▶</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const defaultExercises = [
+  { id: 1, name: "T-Bar Gym80",              sets: 3, reps: 12, weight: 30, notes: "" },
+  { id: 2, name: "Sygnum Pulldown Maschine", sets: 3, reps: 12, weight: 55, notes: "" },
+  { id: 3, name: "Stehende Brustpresse GYM80", sets: 3, reps: 12, weight: 30, notes: "" },
+  { id: 4, name: "Hackenschmidt Gym80",      sets: 3, reps: 12, weight: 0,  notes: "" },
+  { id: 5, name: "Sygnum Rotationsmaschine", sets: 3, reps: 12, weight: 50, notes: "" },
+  { id: 6, name: "Bizeps Curl Gerät",        sets: 3, reps: 12, weight: 25, notes: "" },
+  { id: 7, name: "Trizepsstrecken mit Seil", sets: 3, reps: 12, weight: 30, notes: "" },
+];
+
+const STORAGE_KEY = "trainingsplan_v2";
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return {
+    exercises: JSON.parse(JSON.stringify(defaultExercises)),
+    doneSets: {},
+    lastReset: Date.now(),
+  };
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  flashSave();
+}
+
+let state = loadData();
+let openCard = null;
+
+function flashSave() {
+  const n = document.getElementById("saveNotice");
+  n.classList.add("show");
+  setTimeout(() => n.classList.remove("show"), 1500);
+}
+
+// Date
+document.getElementById("dateLabel").textContent =
+  new Date().toLocaleDateString("de-DE", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+
+function buildAll() {
+  const list = document.getElementById("exerciseList");
+  list.innerHTML = "";
+  state.exercises.forEach((ex, idx) => {
+    list.appendChild(buildCard(ex, idx));
+  });
+  updateStats();
+}
+
+function buildCard(ex, idx) {
+  const card = document.createElement("div");
+  card.className = "exercise-card";
+  card.id = `card-${idx}`;
+
+  const done = (state.doneSets[ex.id] || []);
+  const doneCount = done.filter(Boolean).length;
+
+  // Sets pills
+  let pillsHtml = "";
+  for (let s = 0; s < ex.sets; s++) {
+    const isDone = done[s] ? "done" : "";
+    pillsHtml += `<div class="set-pill ${isDone}" data-idx="${idx}" data-set="${s}" onclick="toggleSet(${idx},${s})">
+      <span class="set-num">S${s+1}</span>
+      <span class="set-check">${done[s] ? "✓" : "○"}</span>
+    </div>`;
+  }
+
+  const weightDisplay = ex.weight > 0 ? `${ex.weight} kg` : "—";
+
+  card.innerHTML = `
+    <div class="ex-header" onclick="toggleCard(${idx})">
+      <span class="ex-name">${ex.name}</span>
+      <div class="ex-badge">
+        <span class="badge badge-reps">${ex.sets}×${ex.reps}</span>
+        <span class="badge badge-weight">${weightDisplay}</span>
+        <span class="chevron">▾</span>
+      </div>
+    </div>
+    <div class="ex-sets-row">${pillsHtml}</div>
+    <div class="edit-panel">
+      <div class="edit-panel-inner">
+        <div class="edit-row">
+          <div class="edit-field">
+            <label>Sätze</label>
+            <div class="stepper">
+              <button onclick="stepVal(${idx},'sets',-1)">−</button>
+              <input type="number" value="${ex.sets}" min="1" max="10" oninput="updateField(${idx},'sets',this.value)" id="f-sets-${idx}">
+              <button onclick="stepVal(${idx},'sets',1)">+</button>
+            </div>
+          </div>
+          <div class="edit-field">
+            <label>Wiederholungen</label>
+            <div class="stepper">
+              <button onclick="stepVal(${idx},'reps',-1)">−</button>
+              <input type="number" value="${ex.reps}" min="1" max="100" oninput="updateField(${idx},'reps',this.value)" id="f-reps-${idx}">
+              <button onclick="stepVal(${idx},'reps',1)">+</button>
+            </div>
+          </div>
+          <div class="edit-field">
+            <label>Gewicht (kg)</label>
+            <div class="stepper">
+              <button onclick="stepVal(${idx},'weight',-2.5)">−</button>
+              <input type="number" value="${ex.weight}" min="0" step="2.5" oninput="updateField(${idx},'weight',this.value)" id="f-weight-${idx}">
+              <button onclick="stepVal(${idx},'weight',2.5)">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="edit-field">
+          <label>Notizen</label>
+          <textarea class="note-field" placeholder="Technikhinweise, Variationen..." oninput="updateField(${idx},'notes',this.value)">${ex.notes}</textarea>
+        </div>
+      </div>
+    </div>
+  `;
+
+  if (openCard === idx) card.classList.add("open");
+  return card;
+}
+
+function toggleCard(idx) {
+  const card = document.getElementById(`card-${idx}`);
+  if (openCard === idx) {
+    card.classList.remove("open");
+    openCard = null;
+  } else {
+    if (openCard !== null) {
+      const prev = document.getElementById(`card-${openCard}`);
+      if (prev) prev.classList.remove("open");
+    }
+    card.classList.add("open");
+    openCard = idx;
+  }
+}
+
+function toggleSet(idx, setIdx) {
+  const ex = state.exercises[idx];
+  if (!state.doneSets[ex.id]) state.doneSets[ex.id] = [];
+  state.doneSets[ex.id][setIdx] = !state.doneSets[ex.id][setIdx];
+  saveData();
+  // Re-render just the set pills
+  const card = document.getElementById(`card-${idx}`);
+  const done = state.doneSets[ex.id];
+  const pills = card.querySelectorAll(".set-pill");
+  pills.forEach((p, s) => {
+    p.className = `set-pill ${done[s] ? "done" : ""}`;
+    p.querySelector(".set-check").textContent = done[s] ? "✓" : "○";
+  });
+  updateStats();
+}
+
+function updateField(idx, field, val) {
+  if (field === "notes") {
+    state.exercises[idx][field] = val;
+  } else {
+    const num = parseFloat(val);
+    if (!isNaN(num) && num >= 0) state.exercises[idx][field] = num;
+  }
+  saveData();
+  // Update badges without full rebuild
+  if (field !== "notes") {
+    const card = document.getElementById(`card-${idx}`);
+    const ex = state.exercises[idx];
+    const repsB = card.querySelector(".badge-reps");
+    const weightB = card.querySelector(".badge-weight");
+    if (repsB) repsB.textContent = `${ex.sets}×${ex.reps}`;
+    if (weightB) weightB.textContent = ex.weight > 0 ? `${ex.weight} kg` : "—";
+    // Rebuild pills if sets changed
+    if (field === "sets") rebuildPills(idx);
+    updateStats();
+  }
+}
+
+function stepVal(idx, field, delta) {
+  const ex = state.exercises[idx];
+  let val = parseFloat(ex[field]) + delta;
+  if (field === "sets") val = Math.max(1, Math.min(10, Math.round(val)));
+  if (field === "reps") val = Math.max(1, Math.min(100, Math.round(val)));
+  if (field === "weight") val = Math.max(0, val);
+  ex[field] = val;
+  const input = document.getElementById(`f-${field}-${idx}`);
+  if (input) input.value = val;
+  saveData();
+  // Update badges
+  const card = document.getElementById(`card-${idx}`);
+  const repsB = card.querySelector(".badge-reps");
+  const weightB = card.querySelector(".badge-weight");
+  if (repsB) repsB.textContent = `${ex.sets}×${ex.reps}`;
+  if (weightB) weightB.textContent = ex.weight > 0 ? `${ex.weight} kg` : "—";
+  if (field === "sets") rebuildPills(idx);
+  updateStats();
+}
+
+function rebuildPills(idx) {
+  const card = document.getElementById(`card-${idx}`);
+  const ex = state.exercises[idx];
+  const row = card.querySelector(".ex-sets-row");
+  const done = state.doneSets[ex.id] || [];
+  let pillsHtml = "";
+  for (let s = 0; s < ex.sets; s++) {
+    const isDone = done[s] ? "done" : "";
+    pillsHtml += `<div class="set-pill ${isDone}" data-idx="${idx}" data-set="${s}" onclick="toggleSet(${idx},${s})">
+      <span class="set-num">S${s+1}</span>
+      <span class="set-check">${done[s] ? "✓" : "○"}</span>
+    </div>`;
+  }
+  row.innerHTML = pillsHtml;
+}
+
+function updateStats() {
+  const exs = state.exercises;
+  let totalSets = 0, doneSets = 0, totalVol = 0, weightCount = 0, weightSum = 0;
+  exs.forEach(ex => {
+    totalSets += ex.sets;
+    const d = state.doneSets[ex.id] || [];
+    const dc = d.filter(Boolean).length;
+    doneSets += dc;
+    if (ex.weight > 0) {
+      totalVol += dc * ex.reps * ex.weight;
+      weightSum += ex.weight;
+      weightCount++;
+    }
+  });
+  document.getElementById("statSets").textContent = `${doneSets}/${totalSets}`;
+  document.getElementById("statExCount").textContent = exs.length;
+  document.getElementById("statKg").textContent = weightCount > 0 ? `${(weightSum/weightCount).toFixed(0)}` : "—";
+  document.getElementById("statVol").textContent = totalVol > 0 ? totalVol.toLocaleString("de") : "—";
+}
+
+// Reset
+document.getElementById("resetBtn").onclick = () => {
+  if (confirm("Alle Sätze zurücksetzen?")) {
+    state.doneSets = {};
+    saveData();
+    buildAll();
+  }
+};
+
+// Timer
+let timerInterval = null;
+let timerRemaining = 90;
+let timerTotal = 90;
+let timerRunning = false;
+
+document.getElementById("timerBtn").onclick = () => {
+  document.getElementById("timerOverlay").classList.add("show");
+};
+document.getElementById("closeTimer").onclick = () => {
+  document.getElementById("timerOverlay").classList.remove("show");
+};
+
+function setTimer(secs) {
+  document.querySelectorAll(".preset-btn").forEach(b => b.classList.remove("sel"));
+  event.target.classList.add("sel");
+  timerTotal = secs;
+  timerRemaining = secs;
+  if (timerRunning) { clearInterval(timerInterval); timerRunning = false; document.getElementById("startTimer").textContent = "▶"; }
+  updateTimerDisplay();
+}
+
+function updateTimerDisplay() {
+  const m = String(Math.floor(timerRemaining/60)).padStart(2,"0");
+  const s = String(timerRemaining%60).padStart(2,"0");
+  document.getElementById("timerDisplay").textContent = `${m}:${s}`;
+  document.getElementById("timerDisplay").style.color = timerRemaining <= 10 ? "#ff4d6d" : "var(--accent)";
+}
+
+document.getElementById("startTimer").onclick = () => {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById("startTimer").textContent = "▶";
+  } else {
+    if (timerRemaining <= 0) { timerRemaining = timerTotal; }
+    timerRunning = true;
+    document.getElementById("startTimer").textContent = "⏸";
+    timerInterval = setInterval(() => {
+      timerRemaining--;
+      updateTimerDisplay();
+      if (timerRemaining <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        document.getElementById("startTimer").textContent = "▶";
+        // Vibrate if supported
+        if (navigator.vibrate) navigator.vibrate([200,100,200]);
+        document.getElementById("timerDisplay").textContent = "FERTIG!";
+      }
+    }, 1000);
+  }
+};
+
+document.getElementById("resetTimer").onclick = () => {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerRemaining = timerTotal;
+  document.getElementById("startTimer").textContent = "▶";
+  updateTimerDisplay();
+};
+
+updateTimerDisplay();
+buildAll();
+</script>
+</body>
+</html>
